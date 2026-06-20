@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Angular.Api.Data.Dtos;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Angular.Api.Data;
 using Angular.Api.Data.Entities;
 
@@ -22,9 +23,25 @@ namespace Angular.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EnquiryMaster>>> GetEnquiryMasters()
+        public async Task<ActionResult<IEnumerable<EnquiryDto>>> GetEnquiryMasters()
         {
-            return await _context.EnquiryMasters.ToListAsync();
+            var query = from e in _context.EnquiryMasters
+                        join s in _context.Services on e.ServiceId equals s.ServiceId
+                        select new EnquiryDto
+                        {
+                            EnquiryId = e.EnquiryId,
+                            CustomerName = e.CustomerName,
+                            MobileNo = e.MobileNo,
+                            City = e.City,
+                            ServiceId = e.ServiceId,
+                            ServiceName = s.ServiceName,
+                            Rate = s.Rate,
+                            EnquiryDate = e.EnquiryDate,
+                            Status = e.Status
+                        };
+
+            var result = await query.ToListAsync();
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
